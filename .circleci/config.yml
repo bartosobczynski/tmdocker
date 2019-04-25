@@ -1,7 +1,10 @@
-version: 2
-jobs:
-  build:
-    parallelism: 3
+version: 2.1
+
+orbs:
+  cypress: cypress-io/cypress@1.1.0
+
+executors:
+  ruby-environment:
     docker:
       - image: circleci/ruby:2.6.2-node
         environment:
@@ -16,39 +19,38 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_DB: myapp_test
           POSTGRES_PASSWORD: ""
-    steps: # a collection of executable commands
-      - checkout # special step to check out source code to working directory
 
-      # Restore bundle cache
-      # Read about caching dependencies: https://circleci.com/docs/2.0/caching/
+jobs:
+  build_rails_app:
+    executor: ruby-environment
+    steps:
+      - checkout
       - restore_cache:
           keys:
             - rails-demo-bundle-v2-{{ checksum "Gemfile.lock" }}
             - rails-demo-bundle-v2-
-
-      - run: # Install Ruby dependencies
+      - run:
           name: Bundle Install
           command: bundle check || bundle install
-
-      # Store bundle cache for Ruby dependencies
       - save_cache:
           key: rails-demo-bundle-v2-{{ checksum "Gemfile.lock" }}
           paths:
             - vendor/bundle
-
       - run:
           name: Wait for DB
           command: dockerize -wait tcp://localhost:5432 -timeout 1m
-
       - run:
           name: Database setup
           command: bin/rails db:schema:load --trace
-
       - run:
-          name: Run rspec in parallel
+          name: Run rspec
           command: bundle exec rspec --format progress
-
-      # Save test results for timing analysis
-      - store_test_results: # Upload test results for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/
+      - store_test_results:
           path: test_results
-      # See https://circleci.com/docs/2.0/deployment-integrations/ for example deploy configs
+
+workflows:
+  build-and-run-cypress:
+    jobs:
+      - build_rails_app
+      - cypress/run
+
