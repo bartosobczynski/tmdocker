@@ -1,7 +1,9 @@
 {
   "name": "myapp",
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "wait-on": "^3.2.0"
+  },
   "devDependencies": {
     "cypress": "^3.2.0"
   }
