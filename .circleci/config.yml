@@ -47,15 +47,12 @@ jobs:
           command: bundle exec rspec --format progress
       - store_test_results:
           path: test_results
-#      - run:
-#          name: Run server
-#          command: bin/rails server -p 3900
-#          background: true
+      - run:
+          name: Run server
+          command: bin/rails server -p 3900
+          background: true
 workflows:
   build:
     jobs:
       - build_rails_app
-      - cypress/run:
-          build: "bin/rails server -p 3900"
-          requires:
-            - build_rails_app
+      - cypress/run
